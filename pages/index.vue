@@ -270,8 +270,6 @@ export default {
         })
 
       })
-
-
     },
     deleteAlert(name) {
       let i = this.alertList.filter(i => i.name != name)
@@ -296,7 +294,7 @@ export default {
     },
     getData() {
       console.log('fetch again')
-      this.$axios.get('http://51.79.204.54:3001/indicator').then(data => {
+      this.$axios.get('https://api.allorigins.win/raw?url=http://51.79.204.54/indicator').then(data => {
         this.dataList = data.data;
       })
     }
