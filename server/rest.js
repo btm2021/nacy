@@ -185,7 +185,6 @@ const main1 = async () => {
                 }
             }
             let final = getIndicator(AllData);
-            console.log(final)
             fs.writeFile("./scaner.json", JSON.stringify(final), "utf-8", (data, err) => {
 
                 console.log('done')

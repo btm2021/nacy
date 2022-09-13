@@ -39,7 +39,7 @@ export default {
   ],
   server: { // default: localhost
     port: 3001,
-    host: '127.0.0.1'
+    host: '0'
   },
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
