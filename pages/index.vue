@@ -298,7 +298,7 @@ export default {
     getData() {
       console.log('fetch again')
       console.log(this.realTimePrice)
-      this.$axios.get('api/indicator').then(data => {
+      this.$axios.get('/api/indicator').then(data => {
         this.dataList = data.data;
       })
     }
