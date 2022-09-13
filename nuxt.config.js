@@ -38,7 +38,7 @@ export default {
   ],
   server: {
     host: '0', // default: localhost
-    port: 80
+    port: 3000
   },
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
