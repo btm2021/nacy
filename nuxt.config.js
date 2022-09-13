@@ -45,15 +45,6 @@ export default {
     // https://go.nuxtjs.dev/bootstrap
     'bootstrap-vue/nuxt',
     '@nuxtjs/axios',
-    ["@kimyvgy/nuxt-page-cache", {
-      cacheStatusHeader: 'x-cache-status',
-      enabled: process.env.NODE_ENV === 'production',
-      store: {
-        type: 'memory',
-        max: 100,
-        ttl: 60,
-      },
-    }]
   ],
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
