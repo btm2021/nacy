@@ -38,7 +38,8 @@ export default {
   buildModules: [
   ],
   server: { // default: localhost
-    port: 3000
+    port: 3000,
+    host: '0'
   },
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
