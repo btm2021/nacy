@@ -1,0 +1,55 @@
+{
+    "timedelay": 20,
+    "timeframe": [
+        "5m",
+        "15m"
+    ],
+    "volumeratio":0.1,
+    "checktrend": 20,
+    "indicator": [
+        {
+            "name": "rsi",
+            "config": {
+                "period": 14
+            }
+        },
+        {
+            "name": "ema",
+            "config": {
+                "value": [
+                    "close"
+                ],
+                "period": 20
+            }
+        },
+        {
+            "name": "macd",
+            "config": {
+                "value": [
+                    "close"
+                ],
+                "fast": 12,
+                "slow": 26,
+                "signal": 9
+            }
+        },
+        {
+            "name": "bb",
+            "config": {
+                "value": [
+                    "close"
+                ],
+                "period": 21,
+                "sdtDev": 2
+            }
+        }
+    ],
+    "alert": [
+        {
+            "name": "bot1"
+        },
+        {
+            "name": "pattern"
+        }
+    ]
+}
