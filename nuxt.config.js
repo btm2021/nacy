@@ -19,9 +19,6 @@ export default {
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
     ]
   },
-  serverMiddleware: [
-    { path: '/api', handler: '~/server/rest.js' },
-  ],
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [
   ],
@@ -38,7 +35,7 @@ export default {
   buildModules: [
   ],
   server: { // default: localhost
-    port: 3001,
+    port: 3000,
     host: '0'
   },
   // Modules: https://go.nuxtjs.dev/config-modules

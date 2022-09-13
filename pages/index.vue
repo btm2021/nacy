@@ -274,7 +274,6 @@ export default {
 
     },
     deleteAlert(name) {
-      console.log(name)
       let i = this.alertList.filter(i => i.name != name)
       this.alertList = i
     },
@@ -297,8 +296,7 @@ export default {
     },
     getData() {
       console.log('fetch again')
-      console.log(this.realTimePrice)
-      this.$axios.get('/api/indicator').then(data => {
+      this.$axios.get(':3001/indicator').then(data => {
         this.dataList = data.data;
       })
     }
