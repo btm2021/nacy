@@ -296,7 +296,7 @@ export default {
     },
     getData() {
       console.log('fetch again')
-      this.$axios.get(':3001/indicator').then(data => {
+      this.$axios.get('http://51.79.204.54:3001/indicator').then(data => {
         this.dataList = data.data;
       })
     }
