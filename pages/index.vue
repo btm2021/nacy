@@ -294,7 +294,7 @@ export default {
     },
     getData() {
       console.log('fetch again')
-      this.$axios.get('https://api.allorigins.win/raw?url=http://51.79.204.54/indicator').then(data => {
+      this.$axios.get(`https://api.allorigins.win/raw?url=http://51.79.204.54/indicator?http://51.79.204.54/indicator?timestamp=${new Date().getTime()}`).then(data => {
         this.dataList = data.data;
       })
     }
