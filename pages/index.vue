@@ -15,7 +15,7 @@
     </div>
     <div class="main">
       <b-row>
-        <b-col class="colr" cols="3">
+        <b-col class="colr" cols="3" cols-sm="12">
           <b-input v-model="filter" autocomplete="off" type="search" class="m-2 text-uppercase"></b-input>
           <b-table :sort-by.sync="sortBy" :sort-desc.sync="sortDesc" :sort-direction="sortDirection" :filter="filter"
             style="font-size:10px;text-align: center;" :fields="fields" :items="dataList" show-empty small hover striped
@@ -26,14 +26,14 @@
 
           </b-table>
         </b-col>
-        <b-col class="colr " cols="9">
+        <b-col class="colr" cols-sm="12" cols="9">
           <b-row>
             <b-col cols="12">
               <VueTradingView :key="tdvLink" :symbol="tdvLink" class="chart" style="height:70vh;width:70vw"
                 :options="chartOptions">
               </VueTradingView>
             </b-col>
-            <b-col class="mt-2" cols="7">
+            <b-col class="mt-2" cols-sm="12" cols="7">
               <b-table-simple bordered class="mt-2" style="font-size:12px" hover small responsive v-if="itemPhanTich">
                 <b-thead>
                   <b-tr>
@@ -84,7 +84,7 @@
 
               </b-table-simple>
             </b-col>
-            <b-col class="mt-2" cols="5">
+            <b-col class="mt-2" cols-sm="12" cols="5">
               <b-container style="font-size:12px">
                 <b-row>
                   <b-col cols="6">
@@ -294,13 +294,7 @@ export default {
     },
     getData() {
       console.log('fetch again')
-      this.$axios.get(`https://api.allorigins.win/raw?url=http://51.79.204.54/indicator?http://51.79.204.54/indicator?timestamp=${new Date().getTime()}`, {
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-        },
-      }).then(data => {
+      this.$axios.get(`https://api.allorigins.win/raw?url=http://51.79.204.54/indicator?http://51.79.204.54/indicator?timestamp=${new Date().getTime()}`).then(data => {
         this.dataList = data.data;
       })
     }
