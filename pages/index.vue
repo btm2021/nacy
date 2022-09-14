@@ -3,19 +3,22 @@
     <div>
       <b-navbar toggleable="lg" type="dark" variant="info">
         <b-navbar-brand href="#">Nacy</b-navbar-brand>
-        <b-navbar-brand href="#">BTC:{{btcprice}}
-          <span v-if="btcStatus" style="color:blue">&#8593</span>
-          <span v-else style="color:red">&#8595</span>
-        </b-navbar-brand>
-        <b-navbar-brand href="#">ETH:{{ethprice}}
-          <span v-if="ethStatus" style="color:blue">&#8593</span>
-          <span v-else style="color:red">&#8595</span>
-        </b-navbar-brand>
+        <b-navbar-nav>
+          <b-nav-text href="#">BTC:{{btcprice}}
+            <span v-if="btcStatus" style="color:blue">&#8593;</span>
+            <span v-else style="color:red">&#8595;</span>
+          </b-nav-text>
+          <b-nav-text href="#">ETH:{{ethprice}}
+            <span v-if="ethStatus" style="color:blue">&#8593;</span>
+            <span v-else style="color:red">&#8595;</span>
+          </b-nav-text>
+        </b-navbar-nav>
+
       </b-navbar>
     </div>
-    <div class="main">
+    <div class="main container-fluid">
       <b-row>
-        <b-col class="colr" cols="3" cols-sm="12">
+        <b-col class="col-xs-12 col-sm-12 col-md-12 col-lg-3">
           <b-input v-model="filter" autocomplete="off" type="search" class="m-2 text-uppercase"></b-input>
           <b-table :sort-by.sync="sortBy" :sort-desc.sync="sortDesc" :sort-direction="sortDirection" :filter="filter"
             style="font-size:10px;text-align: center;" :fields="fields" :items="dataList" show-empty small hover striped
@@ -23,10 +26,9 @@
             <template #cell(name)="data">
               <span @click="phantich(data.item.name,data.item.timeframe)" class="symName">{{data.item.name}}</span>
             </template>
-
           </b-table>
         </b-col>
-        <b-col class="colr" cols-sm="12" cols="9">
+        <b-col class="col-xs-12 col-sm-12 col-md-12 col-lg-9">
           <b-row>
             <b-col cols="12">
               <VueTradingView :key="tdvLink" :symbol="tdvLink" class="chart" style="height:70vh;width:70vw"
