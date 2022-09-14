@@ -13,9 +13,26 @@
             <span v-else style="color:red">&#8595;</span>
           </b-nav-text>
         </b-navbar-nav>
+        <b-navbar-nav class="ml-auto">
 
+          <b-nav-text right>
+            <span v-if="isAdmin || isMod" v-b-toggle.sidebar-mod> &#129409;</span>
+          </b-nav-text>
+
+        </b-navbar-nav>
       </b-navbar>
     </div>
+    <b-sidebar backdrop shadow id="sidebar-mod" title="Sidebar">
+      <div class="px-3 py-2">
+        <p>
+          mod:{{isMod}}admin:{{isAdmin}}
+          Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis
+          in, egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.
+        </p>
+        <b-img src="https://picsum.photos/500/500/?image=54" fluid thumbnail></b-img>
+      </div>
+    </b-sidebar>
+
     <div class="main container-fluid">
       <b-row>
         <b-col class="col-xs-12 col-sm-12 col-md-12 col-lg-3">
@@ -92,9 +109,12 @@
                   <b-col cols="6">
                     <b-form ref="formAlert" @submit.prevent="onSubmit" v-if="itemPhanTich">
                       <b-form-group :label="`Cảnh báo giá ${itemPhanTich.name}`"
-                        description="Tool sẽ cảnh báo giá khi giá thực tế lớn hơn hoặc bằng giá cảnh báo">
-                        <b-form-input size="sm" autocomplete="off" v-model="priceAlert">
+                        description="Tool sẽ cảnh báo giá khi giá thực tế chạm giá cảnh báo">
+                        Giá cao hơn <b-form-input class="mb-4" size="sm" autocomplete="off" v-model="priceAlert">
                         </b-form-input>
+                        <!--                        
+                        Giá thấp hơn <b-form-input size="sm" autocomplete="off" v-model="priceAlert">
+                        </b-form-input> -->
                       </b-form-group>
 
                       <b-button type="submit" variant="primary">Thêm</b-button>
@@ -124,6 +144,11 @@
 
       </b-row>
 
+    </div>
+    <div class="fab-container" @click="toTheTop">
+      <div class="button iconbutton">
+        <span>&#128079;</span>
+      </div>
     </div>
   </div>
 
@@ -165,11 +190,15 @@ export default {
       dataList: [],
       fields: [
         { key: "name" },
-        { key: "timeframe" },
-        { key: "lastPrice" },
+        { key: "timeframe", label: 'T' },
+        { key: "lastPrice", label: 'price' },
         {
           key: "rsi14.value.value",
           label: "RSI",
+          sortable: true
+        }, {
+          key: "funding",
+          label: "Fund",
           sortable: true
         },
       ],
@@ -190,22 +219,36 @@ export default {
       sortDirection: 'desc',
       itemPhanTich: null,
       tdvLink: 'BINANCE:BTCUSDTPERP',
-      realTimePrice: []
+      realTimePrice: [],
+      fundingratelist: [],
+      status: false,
+      isMod: false,
+      isAdmin: false,
     }
   },
   mounted() {
+    let role = this.$route.query.r
+    if (role === "m") {
+      this.isMod = true;
+    }
+    if (role === "a") {
+      this.isAdmin = true;
+    }
     this.getData();
 
     setInterval(() => {
       this.getData();
-    }, 3000);
+    }, 1000 * 5);
     console.log("Starting connection to Binance Server")
-    this.connection = new WebSocket("wss://fstream.binance.com/ws/!ticker@arr")
+    //this.connection = new WebSocket("wss://fstream.binance.com/ws/!ticker@arr")
+    this.connection = new WebSocket("wss://fstream.binance.com/ws/!markPrice@arr@1s")
     this.connection.onmessage = (event) => {
+
       let d = JSON.parse(event.data);
       this.alertCheck(d)
-      let btcprice = parseFloat((d.find(item => item.s === "BTCUSDT")).c);
-      let ethprice = parseFloat((d.find(item => item.s === "ETHUSDT")).c);
+      let btcprice = parseFloat((d.find(item => item.s === "BTCUSDT")).p);
+      let ethprice = parseFloat((d.find(item => item.s === "ETHUSDT")).p);
+
       if (this.btcprice != 0) {
         if (btcprice > this.btcprice) {
           this.btcStatus = true;
@@ -223,9 +266,23 @@ export default {
       }
       this.ethprice = ethprice
 
+      d.forEach(item => {
+        this.dataList.forEach(dl => {
+          if (dl.name === item.s) {
+            dl.funding = parseFloat(String((parseFloat(item.r) * 100).toFixed(3)))
+          }
+        })
+      })
     }
   },
   methods: {
+    toTheTop() {
+      window.scrollTo(0, 0);
+    },
+    getLongShortRatio() {
+
+    },
+
     makeAlert(data, priceAlert, close) {
       this.$bvToast.toast(`Cặp ${data} Giá hiện tại ${close} đang cao hơn giá cảnh báo ${priceAlert}`, {
         title: 'Cảnh Báo Giá',
@@ -255,16 +312,13 @@ export default {
     },
 
     alertCheck(data) {
-
       this.alertList.forEach(alert => {
         let nameAlert = alert.name
         let priceAlert = parseFloat(alert.price);
         data.forEach(item => {
-          let close = parseFloat(item.c)
+          let close = parseFloat(item.p)
           let symbol = item.s
-
           if (symbol === nameAlert) {
-
             if (close >= priceAlert) {
               this.makeAlert(nameAlert, priceAlert, close)
             }
@@ -296,8 +350,15 @@ export default {
     },
     getData() {
       console.log('fetch again')
-      this.$axios.get(`https://api.allorigins.win/raw?url=http://51.79.204.54/indicator?http://51.79.204.54/indicator?timestamp=${new Date().getTime()}`).then(data => {
+      this.status = false
+      this.$axios.get(`https://api.allorigins.win/raw?url=http://51.79.204.54/indicator?timestamp=${new Date().getTime()}`).then(data => {
         this.dataList = data.data;
+        //cap nhat itemphantich
+        if (this.itemPhanTich) {
+          this.itemPhanTich = this.dataList.find(item => {
+            return item.name === this.itemPhanTich.name && item.timeframe === this.itemPhanTich.timeframe
+          })
+        }
       })
     }
   }
@@ -313,6 +374,16 @@ body {
 .symName:hover {
   color: red;
   cursor: pointer;
+}
+
+.fab-container {
+  position: fixed;
+  bottom: 50px;
+  right: 50px;
+  cursor: pointer;
+  font-size: 50px;
+  padding: 5px;
+  color: blue
 }
 
 
