@@ -291,7 +291,7 @@ export default {
         }
       }
       this.ethprice = parseFloat(String(ethprice.toFixed(2)))
-      this.title = `B:${parseFloat(String(btcprice.toFixed(2)))} E:${parseFloat(String(ethprice.toFixed(2)))}`
+      this.title = `B:${parseFloat(String(btcprice.toFixed(2)))}E:${parseFloat(String(ethprice.toFixed(2)))}D:${btcdomchange}`
 
       d.forEach(item => {
         this.dataList.forEach(dl => {
