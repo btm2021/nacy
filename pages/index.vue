@@ -4,13 +4,18 @@
       <b-navbar toggleable="lg" type="dark">
         <b-navbar-brand href="#">Nacy</b-navbar-brand>
         <b-navbar-nav>
-          <b-nav-text href="#" style="color:white">BTC:{{btcprice}}
-            <span v-if="btcStatus" style="color:blue">&#8593;</span>
-            <span v-else style="color:red">&#8595;</span>
+          <b-nav-text href="#" style="color:white">
+            BTC:
+            <span v-if="btcStatus" style="color:#0CCB80">{{btcprice}}&#8593;</span>
+            <span v-else style="color:#F23545">{{btcprice}}&#8595;</span>
           </b-nav-text>
-          <b-nav-text href="#" style="color:white">ETH:{{ethprice}}
-            <span v-if="ethStatus" style="color:blue">&#8593;</span>
-            <span v-else style="color:red">&#8595;</span>
+          <b-nav-text href="#" style="color:white">ETH:
+            <span v-if="ethStatus" style="color:#0CCB80">{{ethprice}}&#8593;</span>
+            <span v-else style="color:#F23545">{{ethprice}}&#8595;</span>
+          </b-nav-text>
+          <b-nav-text href="#" style="color:white">BTCD%:
+            <span v-if="btcdomchangestatus" style="color:#0CCB80">{{btcdomchange}}&#8593;</span>
+            <span v-else style="color:#F23545">{{btcdomchange}}&#8595;</span>
           </b-nav-text>
         </b-navbar-nav>
         <b-navbar-nav class="ml-auto">
@@ -35,12 +40,27 @@
       <b-row style="border:10px red">
         <b-col class="col-xs-12 col-sm-12 col-md-12 col-lg-3">
           <b-input v-model="filter" autocomplete="off" type="search" class="m-2 text-uppercase"></b-input>
-          <b-table class="myTable" :sort-by.sync="sortBy" :sort-desc.sync="sortDesc" :sort-direction="sortDirection"
-            :filter="filter" style="font-size:10px;text-align: center; " :fields="fields" :items="dataList" show-empty
-            small responsive>
+          <b-table head-variant="warning" fixed class="myTable" :sort-by.sync="sortBy" :sort-desc.sync="sortDesc"
+            :sort-direction="sortDirection" :filter="filter" style="font-size:10px;text-align: center; "
+            :fields="fields" :items="dataList" show-empty small responsive>
             <template #cell(name)="data">
               <span @click="phantich(data.item.name,data.item.timeframe)" class="symName">{{data.item.name}}</span>
             </template>
+            <template #cell(priceChangePercent)="data">
+              <span style="color:#F23545" v-if="data.item.priceChangePercent<0">{{data.item.priceChangePercent}}%</span>
+              <span style="color:#0CCB80" v-else>{{data.item.priceChangePercent}}%</span>
+            </template>
+
+            <template #cell(funding)="data">
+              <span style="color:#F23545" v-if="data.item.funding<0">{{data.item.funding}}%</span>
+              <span style="color:#0CCB80" v-else>{{data.item.funding}}%</span>
+            </template>
+            <template #cell(lastPrice)="data">
+              <span style="color:#F23545" v-if="data.item.priceStatus==='down'">{{data.item.lastPrice}}</span>
+              <span style="color:#0CCB80" v-else-if="data.item.priceStatus==='up'">{{data.item.lastPrice}}</span>
+              <span style="color:white" v-else>{{data.item.lastPrice}}</span>
+            </template>
+
           </b-table>
         </b-col>
         <b-col class="col-xs-12 col-sm-12 col-md-12 col-lg-9">
@@ -152,9 +172,14 @@ import VueTradingView from 'vue-trading-view2'
 
 export default {
   components: { VueTradingView },
-
+  head() {
+    return {
+      title: this.title,
+    }
+  },
   data() {
     return {
+      title: "Nacy",
       btcprice: 0,
       btcStatus: false,
       ethprice: 0,
@@ -185,6 +210,10 @@ export default {
         { key: "name" },
         { key: "timeframe", label: 'T' },
         { key: "lastPrice", label: 'price' },
+        {
+          key: 'priceChangePercent', label: '%',
+          sortable: true
+        },
         {
           key: "rsi14.value.value",
           label: "RSI",
@@ -217,7 +246,9 @@ export default {
       status: false,
       isMod: false,
       isAdmin: false,
-      urlLink: "https://scanner5m-15m.baotrinh1.repl.co/indicator"
+      urlLink: "https://scanner5m-15m.baotrinh1.repl.co/indicator",
+      btcdomchange: 0,
+      btcdomchangestatus: false
     }
   },
   mounted() {
@@ -260,6 +291,7 @@ export default {
         }
       }
       this.ethprice = parseFloat(String(ethprice.toFixed(2)))
+      this.title = `B:${parseFloat(String(btcprice.toFixed(2)))} E:${parseFloat(String(ethprice.toFixed(2)))}`
 
       d.forEach(item => {
         this.dataList.forEach(dl => {
@@ -290,7 +322,11 @@ export default {
         this.play().then(() => {
           this.play().then(() => {
             this.play().then(() => {
-              this.play();
+              this.play().then(() => {
+                this.play().then(() => {
+                  this.play();
+                })
+              })
             })
           })
         })
@@ -343,12 +379,53 @@ export default {
         this.priceAlert = item.lastPrice;
       }
     },
+
     getData() {
       console.log('fetch again')
+      this.$axios.get(`https://www.binance.com/fapi/v1/ticker/24hr?symbol=BTCDOMUSDT`).then(data => {
+        this.btcdomchange = parseFloat(data.data.priceChangePercent)
+        if (this.btcdomchange > 0) {
+          this.btcdomchangestatus = true;
+        } else {
+          this.btcdomchangestatus = false
+        }
+      })
       this.status = false
-      let api = 'https://api.allorigins.win/raw?url=https://slategreyfamiliarbug.baotrinh1.repl.co/indicator?timestamp='
-      api = 'https://slategreyfamiliarbug.baotrinh1.repl.co/indicator?timestamp='
+
+
       this.$axios.get(`${this.urlLink}?timestamp=${new Date().getTime()}`).then(data => {
+        for (let i = 0; i < this.dataList.length; i++) {
+          for (let a = 0; a < data.data.length; a++) {
+            if (this.dataList[i].name === data.data[a].name) {
+              let status = "";
+              if (this.dataList[i].lastPrice > data.data[a].lastPrice) {
+                status = "up";
+              }
+              if (this.dataList[i].lastPrice < data.data[a].lastPrice) {
+                status = "down";
+              }
+              if (this.dataList[i].lastPrice === data.data[a].lastPrice) {
+                status = "none"
+              }
+              data.data[a].priceStatus = status;
+
+            }
+          }
+        }
+
+        //lay chenh lech gia
+        this.$axios.get(`https://www.binance.com/fapi/v1/ticker/24hr`).then(data1 => {
+          data1.data.forEach(item => {
+            let s = item.symbol;
+            let c = item.priceChangePercent;
+            for (let a = 0; a < data.data.length; a++) {
+              if (data.data[a].name === s) {
+                data.data[a].priceChangePercent = parseFloat(String(parseFloat(c).toFixed(1)))
+              }
+            }
+          })
+        })
+
         this.dataList = data.data;
         //cap nhat itemphantich
         if (this.itemPhanTich) {
