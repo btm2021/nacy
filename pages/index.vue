@@ -1,14 +1,14 @@
 <template>
   <div>
     <div>
-      <b-navbar toggleable="lg" type="dark" variant="info">
+      <b-navbar toggleable="lg" type="dark">
         <b-navbar-brand href="#">Nacy</b-navbar-brand>
         <b-navbar-nav>
-          <b-nav-text href="#">BTC:{{btcprice}}
+          <b-nav-text href="#" style="color:white">BTC:{{btcprice}}
             <span v-if="btcStatus" style="color:blue">&#8593;</span>
             <span v-else style="color:red">&#8595;</span>
           </b-nav-text>
-          <b-nav-text href="#">ETH:{{ethprice}}
+          <b-nav-text href="#" style="color:white">ETH:{{ethprice}}
             <span v-if="ethStatus" style="color:blue">&#8593;</span>
             <span v-else style="color:red">&#8595;</span>
           </b-nav-text>
@@ -32,12 +32,12 @@
     </b-sidebar>
 
     <div class="main container-fluid">
-      <b-row>
+      <b-row style="border:10px red">
         <b-col class="col-xs-12 col-sm-12 col-md-12 col-lg-3">
           <b-input v-model="filter" autocomplete="off" type="search" class="m-2 text-uppercase"></b-input>
-          <b-table :sort-by.sync="sortBy" :sort-desc.sync="sortDesc" :sort-direction="sortDirection" :filter="filter"
-            style="font-size:10px;text-align: center;" :fields="fields" :items="dataList" show-empty small hover striped
-            responsive>
+          <b-table class="myTable" :sort-by.sync="sortBy" :sort-desc.sync="sortDesc" :sort-direction="sortDirection"
+            :filter="filter" style="font-size:10px;text-align: center; " :fields="fields" :items="dataList" show-empty
+            small responsive>
             <template #cell(name)="data">
               <span @click="phantich(data.item.name,data.item.timeframe)" class="symName">{{data.item.name}}</span>
             </template>
@@ -217,6 +217,7 @@ export default {
       status: false,
       isMod: false,
       isAdmin: false,
+      urlLink: "https://scanner5m-15m.baotrinh1.repl.co/indicator"
     }
   },
   mounted() {
@@ -347,7 +348,7 @@ export default {
       this.status = false
       let api = 'https://api.allorigins.win/raw?url=https://slategreyfamiliarbug.baotrinh1.repl.co/indicator?timestamp='
       api = 'https://slategreyfamiliarbug.baotrinh1.repl.co/indicator?timestamp='
-      this.$axios.get(`${api}${new Date().getTime()}`).then(data => {
+      this.$axios.get(`${this.urlLink}?timestamp=${new Date().getTime()}`).then(data => {
         this.dataList = data.data;
         //cap nhat itemphantich
         if (this.itemPhanTich) {
@@ -365,6 +366,12 @@ export default {
 html,
 body {
   height: 100%;
+  background-color: #161A1E;
+  ;
+}
+
+.myTable table {
+  color: #e6eaee !important;
 }
 
 .symName:hover {
