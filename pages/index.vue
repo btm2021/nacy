@@ -38,7 +38,7 @@
 
     <div class="main container-fluid">
       <b-row style="border:10px red">
-        <b-col class="col-xs-12 col-sm-12 col-md-12 col-lg-3">
+        <b-col xs="12" sm="12" md="12" lg="3">
           <b-input v-model="filter" autocomplete="off" type="search" class="m-2 text-uppercase"></b-input>
           <b-table head-variant="warning" fixed class="myTable" :sort-by.sync="sortBy" :sort-desc.sync="sortDesc"
             :sort-direction="sortDirection" :filter="filter" style="font-size:10px;text-align: center; "
@@ -63,7 +63,7 @@
 
           </b-table>
         </b-col>
-        <b-col class="col-xs-12 col-sm-12 col-md-12 col-lg-9">
+        <b-col xs="12" sm="12" md="12" lg="9">
           <b-row>
             <b-col cols="12">
               <VueTradingView :key="tdvLink" :symbol="tdvLink" class="chart" style="height:70vh;width:70vw"
