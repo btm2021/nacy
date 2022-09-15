@@ -250,7 +250,7 @@ export default {
           this.btcStatus = false
         }
       }
-      this.btcprice = btcprice
+      this.btcprice = parseFloat(String(btcprice.toFixed(2)))
       if (this.ethprice != 0) {
         if (btcprice > this.ethprice) {
           this.ethStatus = true;
@@ -258,7 +258,7 @@ export default {
           this.ethStatus = false
         }
       }
-      this.ethprice = ethprice
+      this.ethprice = parseFloat(String(ethprice.toFixed(2)))
 
       d.forEach(item => {
         this.dataList.forEach(dl => {
