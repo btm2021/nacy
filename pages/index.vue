@@ -14,11 +14,9 @@
           </b-nav-text>
         </b-navbar-nav>
         <b-navbar-nav class="ml-auto">
-
           <b-nav-text right>
             <span v-if="isAdmin || isMod" v-b-toggle.sidebar-mod> &#129409;</span>
           </b-nav-text>
-
         </b-navbar-nav>
       </b-navbar>
     </div>
@@ -131,17 +129,12 @@
                         </span>
                       </template>
                     </b-table>
-
-
                   </b-col>
                 </b-row>
-
               </b-container>
-
             </b-col>
           </b-row>
         </b-col>
-
       </b-row>
 
     </div>
@@ -245,6 +238,7 @@ export default {
     this.connection.onmessage = (event) => {
 
       let d = JSON.parse(event.data);
+
       this.alertCheck(d)
       let btcprice = parseFloat((d.find(item => item.s === "BTCUSDT")).p);
       let ethprice = parseFloat((d.find(item => item.s === "ETHUSDT")).p);
@@ -351,7 +345,9 @@ export default {
     getData() {
       console.log('fetch again')
       this.status = false
-      this.$axios.get(`https://api.allorigins.win/raw?url=http://51.79.204.54/indicator?timestamp=${new Date().getTime()}`).then(data => {
+      let api = 'https://api.allorigins.win/raw?url=https://slategreyfamiliarbug.baotrinh1.repl.co/indicator?timestamp='
+      api = 'https://slategreyfamiliarbug.baotrinh1.repl.co/indicator?timestamp='
+      this.$axios.get(`${api}${new Date().getTime()}`).then(data => {
         this.dataList = data.data;
         //cap nhat itemphantich
         if (this.itemPhanTich) {
