@@ -51,7 +51,7 @@
               </VueTradingView>
             </b-col>
             <b-col class="mt-2" cols-sm="12" cols="7">
-              <b-table-simple bordered class="mt-2" style="font-size:12px" hover small responsive v-if="itemPhanTich">
+              <b-table-simple bordered class="mt-2 myTable" style="font-size:12px" small responsive v-if="itemPhanTich">
                 <b-thead>
                   <b-tr>
                     <b-th>Mô tả</b-th>
@@ -102,7 +102,7 @@
               </b-table-simple>
             </b-col>
             <b-col class="mt-2" cols-sm="12" cols="5">
-              <b-container style="font-size:12px">
+              <b-container style="font-size:12px;color:white">
                 <b-row>
                   <b-col cols="6">
                     <b-form ref="formAlert" @submit.prevent="onSubmit" v-if="itemPhanTich">
@@ -120,8 +120,8 @@
                   </b-col>
                   <b-col cols="6">
 
-                    <b-table class="mr-2" :fields="fieldsAlert" small hover striped :items="alertList"
-                      v-if="alertList.length>0" show-empty>
+                    <b-table class="mr-2 myTable" style="color:white" :fields="fieldsAlert" small striped
+                      :items="alertList" v-if="alertList.length>0" show-empty>
                       <template #cell(tool)="data">
                         <span class="toolDelete" @click="deleteAlert(data.item.name)"
                           style="text-align: center;color:blue">
