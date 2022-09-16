@@ -44,7 +44,7 @@
     </b-sidebar>
 
     <div class="main container-fluid">
-      <b-modal :hide-footer="true" ok-only id="calcModal" title="Tính tiền Binance Calculate">
+      <b-modal :hide-footer="true" ok-only id="calcModal" title="Tính PNL Future Binance">
         <b-form @submit.prevent="calcPNL" @show="onResetCalc" @reset="onResetCalc">
           <b-form-group>
             <b-form-radio-group v-model="calc.side" :options="['LONG','SHORT']" button-variant="outline-primary"
@@ -67,12 +67,12 @@
               <code>{{(parseFloat(calc.margin)/parseFloat(calc.levage)).toFixed(1)}}</code><b> USDT</b></span>
           </b-form-group>
           <b-form-group>
-            <label>Giá Entry</label>
+            <label>Entry</label>
             <b-form-input v-model="calc.entry" required>
             </b-form-input>
           </b-form-group>
           <b-form-group>
-            <label>Giá Đóng cửa</label>
+            <label>Exit</label>
             <b-form-input v-model="calc.close" required>
             </b-form-input>
           </b-form-group>
@@ -399,6 +399,7 @@ export default {
     }
   },
   methods: {
+
     calcPNL() {
       /*Unrealized PNL = position size * direction of order * (mark price - entry price)
 ROE% =Unrealized PNL in USDT / entry margin = ( ( mark Price - entry Price ) * direction of order * size ) / （position_amount * contract_multiplier * mark_price* IMR）
