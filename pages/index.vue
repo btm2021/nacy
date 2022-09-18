@@ -32,14 +32,24 @@
       </b-navbar>
     </div>
 
-    <b-sidebar backdrop shadow id="sidebar-mod" title="Sidebar">
+    <b-sidebar width="800px" backdrop shadow id="sidebar-mod" title="Copytrade">
       <div class="px-3 py-2">
-        <p>
-          mod:{{isMod}}admin:{{isAdmin}}
-          Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis
-          in, egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.
-        </p>
-        <b-img src="https://picsum.photos/500/500/?image=54" fluid thumbnail></b-img>
+        <b-row>
+          <b-col cols="6" v-for="(account,index) in allAccount" :key="index">
+            <span><b>{{account.name}}</b> Balance :<code>{{account.totalWalletBalance}}</code>Pnl :
+              <code>{{account.totalCrossUnPnl}}</code></span>
+            <span><br /><b>Vị thế</b></span>
+            <b-table small style="font-size:12px" hover striped bordered :items="account.positions" show-empty>
+            </b-table>
+            <span><b>Lệnh chờ</b></span>
+            <b-table small style="font-size:12px" hover striped bordered :items="account.openorder" show-empty>
+            </b-table>
+          </b-col>
+        </b-row>
+        <b-table small style="font-size:12px" hover striped bordered :items="allAccount" :fields="infoAccountFields"
+          show-empty></b-table>
+        <b-table small style="font-size:12px" hover striped bordered :items="msgStreamCp" show-empty></b-table>
+
       </div>
     </b-sidebar>
 
@@ -238,8 +248,8 @@
               </b-container>
             </b-col>
             <b-col class="mt-2" cols="12">
-              <b-table style="font-size:12px;color: aliceblue !important;display: none;" class="myTable" :items="dataVolume"
-                show-empty small></b-table>
+              <b-table style="font-size:12px;color: aliceblue !important;display: none;" class="myTable"
+                :items="dataVolume" show-empty small></b-table>
             </b-col>
           </b-row>
         </b-col>
@@ -324,6 +334,7 @@ export default {
           sortable: true
         },
       ],
+
       fieldsAlert: [
         {
           key: 'name',
@@ -349,7 +360,14 @@ export default {
       urlLink: "https://scanner5m-15m.baotrinh1.repl.co/indicator",
       volumeLink: 'https://scanner5m-15m.baotrinh1.repl.co/volumeAlert',
       btcdomchange: 0,
-      btcdomchangestatus: false
+      btcdomchangestatus: false,
+      copytradeconnection: null,
+      msgStreamCp: [],
+      allAccount: [],
+      infoAccountFields: [
+        { key: 'name' },
+
+      ]
     }
   },
   mounted() {
@@ -368,6 +386,13 @@ export default {
     console.log("Starting connection to Binance Server")
     //this.connection = new WebSocket("wss://fstream.binance.com/ws/!ticker@arr")
     this.connection = new WebSocket("wss://fstream.binance.com/ws/!markPrice@arr@1s")
+    //ws://nacy.duckdns.org:3001
+    console.log("Start")
+    this.copytradeconnection = new WebSocket("ws://nacy.duckdns.org:3001");
+    this.copytradeconnection.onmessage = (event) => {
+      let d = JSON.parse(event.data);
+      this.msgStreamCp.push({ message: d })
+    }
     this.connection.onmessage = (event) => {
 
       let d = JSON.parse(event.data);
@@ -511,6 +536,12 @@ ROE% =Unrealized PNL in USDT / entry margin = ( ( mark Price - entry Price ) * d
     },
 
     getData() {
+      let urlInfo = 'https://nacy.duckdns.org/infoAccount'
+      this.$axios.post(urlInfo, {
+        action: 'all'
+      }).then(data => {
+        this.allAccount = data.data;
+      })
       console.log('fetch again')
       this.$axios.get(`https://www.binance.com/fapi/v1/ticker/24hr?symbol=BTCDOMUSDT`).then(data => {
         this.btcdomchange = parseFloat(data.data.priceChangePercent)
