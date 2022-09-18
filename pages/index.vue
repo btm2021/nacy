@@ -32,20 +32,53 @@
       </b-navbar>
     </div>
 
+    <b-modal @ok="handleOkChangeAccountMaster" @show="resetModalChangeAccountMaster" id="modalChangeMaster"
+      title="Thay đổi Acc Master">
+      <b-container>
+
+        <b-form-group label="Chọn Acc Master">
+          <b-form-select v-model="changeAccMaster" :options="optionChangeAccMaster"></b-form-select>
+        </b-form-group>
+
+      </b-container>
+    </b-modal>
+    <b-modal id="modalChangeAccount" title="Chỉnh sửa Account">
+      <p class="my-4">Hello from modal!</p>
+    </b-modal>
+    <b-modal id="modalChangeServer" title="Chỉnh sửa Server">
+      <p class="my-4">Hello from modal!</p>
+    </b-modal>
     <b-sidebar width="800px" backdrop shadow id="sidebar-mod" title="Copytrade">
+
       <div class="px-3 py-2">
+        <b-dropdown class="mx-1" right variant="success" text="Cấu Hình">
+          <b-dropdown-item v-b-modal.modalChangeMaster>Thay đổi acc Master</b-dropdown-item>
+          <b-dropdown-item v-b-modal.modalChangeAccount>Chỉnh sửa tài khoản</b-dropdown-item>
+          <b-dropdown-item v-b-modal.modalChangeServer>Tắt mở server</b-dropdown-item>
+        </b-dropdown>
         <b-row>
           <b-col xs="12" sm="12" md="12" lg="6" v-for="(account,index) in allAccount" :key="index">
             <span><b>{{account.name}}</b> *Tổng tiền :
               <code>{{parseFloat(String(parseFloat(account.totalWalletBalance).toFixed(0)))}}</code> *Pnl :
               <code>{{parseFloat(String(parseFloat(account.totalCrossUnPnl).toFixed(1)))}}</code></span>
             <span><br /><b>Vị thế</b></span>
-            <b-table :fields="positionFields" small style="font-size:12px" hover striped bordered
+            <b-table fixed :fields="positionFields" small style="font-size:12px" hover striped bordered
               :items="account.positions" show-empty>
+              <template #cell(tool)="data">
+                <b-button size="sm" variant="danger"
+                  @click="thanhlyvithe({account:account.name,symbol:data.item.symbol,orderId:data.item.orderId})">X
+                </b-button>
+              </template>
             </b-table>
             <span><b>Lệnh chờ</b></span>
-            <b-table small style="font-size:12px" hover striped bordered :items="account.openorder"
+            <b-table fixed small style="font-size:12px" hover striped bordered :items="account.openorder"
               :fields="orderWaitFields" show-empty>
+              <template #cell(tool)="data">
+
+                <b-button size="sm" variant="danger"
+                  @click="deleteOrder({account:account.name,symbol:data.item.symbol,orderId:data.item.orderId})">X
+                </b-button>
+              </template>
             </b-table>
           </b-col>
         </b-row>
@@ -370,6 +403,8 @@ export default {
       status: false,
       isMod: false,
       isAdmin: false,
+      orderLink: '',
+      positionLink: '',
       urlLink: "https://baotm.duckdns.org/indicator",
       volumeLink: 'https://baotm.duckdns.org/volumeAlert',
       btcdomchange: 0,
@@ -388,7 +423,9 @@ export default {
             return (parseFloat(item.notional) > 0) ? "LONG" : "SHORT"
           }
         },
-        { key: 'unrealizedProfit', label: 'PNL' }
+        { key: 'unrealizedProfit', label: 'PNL' },
+
+        { key: 'tool', label: '#' },
       ],
       orderWaitFields: [
         { key: 'symbol' },
@@ -397,13 +434,20 @@ export default {
             return (item.side === 'BUY') ? 'LONG' : 'SHORT'
           }
         },
-        { key: 'price', label: 'Entry' },
+        {
+          key: 'price', label: 'Entry', formatter: (value, key, item) => {
+            return (parseFloat(item.price)).toFixed(1)
+          }
+        },
         {
           key: 'initMargin', label: 'Vốn',
           formatter: (value, key, item) => {
-            return (parseFloat(item.price) * parseFloat(item.origQty)).toFixed(1)
+
+            return (parseFloat(item.price) * parseFloat(item.origQty) / 20).toFixed(1)
           }
-        }
+        },
+
+        { key: 'tool', label: '#' },
 
       ],
       msgStreamCpFields: [
@@ -415,8 +459,10 @@ export default {
           }
         },
         { key: 'text', label: "thông báo" }
-      ]
-
+      ],
+      changeAccMaster: '',
+      optionChangeAccMaster: [],
+      linkbase: 'https://nacy.duckdns.org/',
     }
   },
   mounted() {
@@ -475,6 +521,58 @@ export default {
     }
   },
   methods: {
+    handleOkChangeAccountMaster() {
+      if (this.changeAccMaster) {
+        let link = this.linkbase + 'acc';
+        this.$axios.post(link, {
+
+        })
+
+      } else {
+        this.$bvToast.toast(`Vui Lòng Chọn 1 Acc để set thành Master`, {
+          title: 'Lỗi',
+          autoHideDelay: 5000,
+          appendToast: true,
+          variant: 'danger'
+        })
+      }
+    },
+    resetModalChangeAccountMaster() {
+      this.changeAccMaster = null;
+    },
+    setOptionChangeAccountMaster() {
+      this.allAccount.forEach(acc => {
+        this.optionChangeAccMaster.push(acc.name)
+      })
+    },
+    deleteOrder(info) {
+      this.$bvModal.msgBoxConfirm(`Bạn muốn xóa ORDER ${info.symbol} trên account ${info.account}`, {
+        title: 'Xác nhận',
+        size: 'sm',
+        buttonSize: 'sm',
+        okVariant: 'danger',
+        okTitle: 'YES',
+        cancelTitle: 'NO',
+        footerClass: 'p-2',
+        hideHeaderClose: false,
+        centered: true
+      })
+        .then(value => {
+          if (value) {
+            //call
+            // this.$axios.post(this.orderLink, {
+            //   action: 'setmaster',
+            //   idAccount: info.account,
+            //   infoAccount: []
+            // }).then(data => {
+            //   console.log(data.data)
+            // })
+          }
+        })
+        .catch(err => {
+          // An error occurred
+        })
+    },
     receptor(msg) {
       this.msgStreamCp.push({ text: JSON.parse(msg.message), time: new Date() })
     },
@@ -587,8 +685,10 @@ ROE% =Unrealized PNL in USDT / entry margin = ( ( mark Price - entry Price ) * d
         action: 'all'
       }).then(data => {
         this.allAccount = data.data;
+        this.optionChangeAccMaster = []
+        this.setOptionChangeAccountMaster();
+
       })
-      console.log('fetch again')
       this.$axios.get(`https://www.binance.com/fapi/v1/ticker/24hr?symbol=BTCDOMUSDT`).then(data => {
         this.btcdomchange = parseFloat(data.data.priceChangePercent)
         if (this.btcdomchange > 0) {
