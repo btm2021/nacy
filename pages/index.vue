@@ -35,9 +35,10 @@
     <b-sidebar width="800px" backdrop shadow id="sidebar-mod" title="Copytrade">
       <div class="px-3 py-2">
         <b-row>
-          <b-col cols="6" v-for="(account,index) in allAccount" :key="index">
-            <span><b>{{account.name}}</b> Balance :<code>{{account.totalWalletBalance}}</code>Pnl :
-              <code>{{account.totalCrossUnPnl}}</code></span>
+          <b-col xs="12" sm="12" md="12" lg="6" v-for="(account,index) in allAccount" :key="index">
+            <span><b>{{account.name}}</b> *Tổng tiền :
+              <code>{{parseFloat(String(parseFloat(account.totalWalletBalance).toFixed(0)))}}</code> *Pnl :
+              <code>{{parseFloat(String(parseFloat(account.totalCrossUnPnl).toFixed(1)))}}</code></span>
             <span><br /><b>Vị thế</b></span>
             <b-table :fields="positionFields" small style="font-size:12px" hover striped bordered
               :items="account.positions" show-empty>
