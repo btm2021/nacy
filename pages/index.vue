@@ -238,7 +238,7 @@
               </b-container>
             </b-col>
             <b-col class="mt-2" cols="12">
-              <b-table style="font-size:12px;color: aliceblue !important;" class="myTable" :items="dataVolume"
+              <b-table style="font-size:12px;color: aliceblue !important;display: none;" class="myTable" :items="dataVolume"
                 show-empty small></b-table>
             </b-col>
           </b-row>
