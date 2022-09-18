@@ -153,6 +153,7 @@
                 :options="chartOptions">
               </VueTradingView>
             </b-col>
+
             <b-col class="mt-2" cols-sm="12" cols="7">
               <b-table-simple bordered class="mt-2 myTable" style="font-size:12px" small responsive v-if="itemPhanTich">
                 <b-thead>
@@ -236,6 +237,10 @@
                 </b-row>
               </b-container>
             </b-col>
+            <b-col class="mt-2" cols="12">
+              <b-table style="font-size:12px;color: aliceblue !important;" class="myTable" :items="dataVolume"
+                show-empty small></b-table>
+            </b-col>
           </b-row>
         </b-col>
       </b-row>
@@ -299,6 +304,7 @@ export default {
           "Stochastic@tv-basicstudies"
         ]
       },
+      dataVolume: [],
       dataList: [],
       fields: [
         { key: "name" },
@@ -341,6 +347,7 @@ export default {
       isMod: false,
       isAdmin: false,
       urlLink: "https://scanner5m-15m.baotrinh1.repl.co/indicator",
+      volumeLink: 'https://scanner5m-15m.baotrinh1.repl.co/volumeAlert',
       btcdomchange: 0,
       btcdomchangestatus: false
     }
@@ -514,7 +521,10 @@ ROE% =Unrealized PNL in USDT / entry margin = ( ( mark Price - entry Price ) * d
         }
       })
       this.status = false
+      this.$axios.get(`${this.volumeLink}?timestamp=${new Date().getTime()}`).then(data => {
 
+        this.dataVolume = data.data;
+      })
 
       this.$axios.get(`${this.urlLink}?timestamp=${new Date().getTime()}`).then(data => {
         for (let i = 0; i < this.dataList.length; i++) {
