@@ -51,7 +51,7 @@
     <b-sidebar width="800px" backdrop shadow id="sidebar-mod" title="Copytrade">
 
       <div class="px-3 py-2">
-        <b-dropdown class="mx-1" right variant="success" text="Cấu Hình">
+        <b-dropdown style="display:none" class="mx-1" right variant="success" text="Cấu Hình">
           <b-dropdown-item v-b-modal.modalChangeMaster>Thay đổi acc Master</b-dropdown-item>
           <b-dropdown-item v-b-modal.modalChangeAccount>Chỉnh sửa tài khoản</b-dropdown-item>
           <b-dropdown-item v-b-modal.modalChangeServer>Tắt mở server</b-dropdown-item>
@@ -560,13 +560,14 @@ export default {
         .then(value => {
           if (value) {
             //call
-            // this.$axios.post(this.orderLink, {
-            //   action: 'setmaster',
-            //   idAccount: info.account,
-            //   infoAccount: []
-            // }).then(data => {
-            //   console.log(data.data)
-            // })
+            this.$axios.post(this.orderLink, {
+              action: 'setmaster',
+              idAccount: info.account
+            }, {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }).then(data => {
+              console.log(data.data)
+            })
           }
         })
         .catch(err => {
