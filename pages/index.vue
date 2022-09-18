@@ -50,7 +50,8 @@
           </b-col>
         </b-row>
 
-        <b-table small style="font-size:12px" hover striped bordered :items="msgStreamCp" show-empty></b-table>
+        <b-table small style="font-size:12px" hover striped bordered :items="msgStreamCp" :fields="msgStreamCpFields"
+          show-empty></b-table>
 
       </div>
     </b-sidebar>
@@ -276,10 +277,20 @@ export default {
   head() {
     return {
       title: this.title,
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        {
+          hid: 'description',
+          name: 'description',
+          content: 'my website description'
+        }
+      ],
     }
   },
   data() {
     return {
+
       calcStatus: true,
       calc: {
         entry: null,
@@ -394,10 +405,24 @@ export default {
           }
         }
 
+      ],
+      msgStreamCpFields: [
+
+        {
+          key: 'time', label: "Thời gian ",
+          formatter: (value, key, item) => {
+            return this.$moment(item.time).format('hh:mm:ss a')
+          }
+        },
+        { key: 'text', label: "thông báo" }
       ]
+
     }
   },
   mounted() {
+    this.$pnSubscribe({ channels: ['mychannel'], withPresence: true });
+    this.$pnGetMessage('mychannel', this.receptor);
+
     let role = this.$route.query.r
     if (role === "m") {
       this.isMod = true;
@@ -411,15 +436,7 @@ export default {
       this.getData();
     }, 1000 * 5);
     console.log("Starting connection to Binance Server")
-    //this.connection = new WebSocket("wss://fstream.binance.com/ws/!ticker@arr")
     this.connection = new WebSocket("wss://fstream.binance.com/ws/!markPrice@arr@1s")
-    //ws://nacy.duckdns.org:3001
-    console.log("Start")
-    this.copytradeconnection = new WebSocket("ws://nacy.duckdns.org:3001");
-    this.copytradeconnection.onmessage = (event) => {
-      let d = JSON.parse(event.data);
-      this.msgStreamCp.push({ message: d })
-    }
     this.connection.onmessage = (event) => {
 
       let d = JSON.parse(event.data);
@@ -458,7 +475,9 @@ export default {
     }
   },
   methods: {
-
+    receptor(msg) {
+      this.msgStreamCp.push({ text: msg.message, time: new Date() })
+    },
     calcPNL() {
       /*Unrealized PNL = position size * direction of order * (mark price - entry price)
 ROE% =Unrealized PNL in USDT / entry margin = ( ( mark Price - entry Price ) * direction of order * size ) / （position_amount * contract_multiplier * mark_price* IMR）
