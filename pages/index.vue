@@ -476,7 +476,7 @@ export default {
   },
   methods: {
     receptor(msg) {
-      this.msgStreamCp.push({ text: msg.message, time: new Date() })
+      this.msgStreamCp.push({ text: JSON.parse(msg.message), time: new Date() })
     },
     calcPNL() {
       /*Unrealized PNL = position size * direction of order * (mark price - entry price)
