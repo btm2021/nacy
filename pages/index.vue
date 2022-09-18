@@ -39,15 +39,16 @@
             <span><b>{{account.name}}</b> Balance :<code>{{account.totalWalletBalance}}</code>Pnl :
               <code>{{account.totalCrossUnPnl}}</code></span>
             <span><br /><b>Vị thế</b></span>
-            <b-table small style="font-size:12px" hover striped bordered :items="account.positions" show-empty>
+            <b-table :fields="positionFields" small style="font-size:12px" hover striped bordered
+              :items="account.positions" show-empty>
             </b-table>
             <span><b>Lệnh chờ</b></span>
-            <b-table small style="font-size:12px" hover striped bordered :items="account.openorder" show-empty>
+            <b-table small style="font-size:12px" hover striped bordered :items="account.openorder"
+              :fields="orderWaitFields" show-empty>
             </b-table>
           </b-col>
         </b-row>
-        <b-table small style="font-size:12px" hover striped bordered :items="allAccount" :fields="infoAccountFields"
-          show-empty></b-table>
+
         <b-table small style="font-size:12px" hover striped bordered :items="msgStreamCp" show-empty></b-table>
 
       </div>
@@ -366,6 +367,31 @@ export default {
       allAccount: [],
       infoAccountFields: [
         { key: 'name' },
+
+      ],
+      positionFields: [
+        { key: 'symbol' },
+        {
+          key: 'side', formatter: (value, key, item) => {
+            return (parseFloat(item.notional) > 0) ? "LONG" : "SHORT"
+          }
+        },
+        { key: 'unrealizedProfit', label: 'PNL' }
+      ],
+      orderWaitFields: [
+        { key: 'symbol' },
+        {
+          key: 'side', formatter: (value, key, item) => {
+            return (item.side === 'BUY') ? 'LONG' : 'SHORT'
+          }
+        },
+        { key: 'price', label: 'Entry' },
+        {
+          key: 'initMargin', label: 'Vốn',
+          formatter: (value, key, item) => {
+            return (parseFloat(item.price) * parseFloat(item.origQty)).toFixed(1)
+          }
+        }
 
       ]
     }
