@@ -42,16 +42,43 @@
 
       </b-container>
     </b-modal>
-    <b-modal id="modalChangeAccount" title="Chỉnh sửa Account">
-      <p class="my-4">Hello from modal!</p>
+    <b-modal size="lg" @show="getAllAccountJSON" id="modalChangeAccount" title="Chỉnh sửa Account">
+      <b-button variant="success">Thêm Account</b-button>
+      <div>
+
+      </div>
+      <b-table bordered fixed :fields="chinhsuaaccountfields" :items="ListAccountsJSON" show-empty small hover striped>
+        <template #cell(role)="data">
+          <b-badge variant="warning" v-if="data.item.role==='master'">Master</b-badge>
+
+          <b-badge variant="success" v-else>Slave</b-badge>
+        </template>
+        <template #cell(status)="data">
+          <div class="text-center" @click="toggleStatus(data.item)">
+            <b-badge variant="success" v-if="(data.item.status)">V</b-badge>
+            <b-badge variant="danger" v-else>X</b-badge>
+          </div>
+        </template>
+
+        <template #cell(apikey)="data">
+          <span class="text-center">{{getShort(data.item.apikey)}}</span>
+        </template>
+
+        <template #cell(apisec)="data">
+          <span class="text-center">{{getShort(data.item.apisec)}}</span>
+        </template>
+        <template #cell(tool)="data" class="text-center">
+          <span @click="accountDelete(data.item)">❌</span>
+        </template>
+      </b-table>
     </b-modal>
-    <b-modal id="modalChangeServer" title="Chỉnh sửa Server">
-      <p class="my-4">Hello from modal!</p>
+    <b-modal ok-only hide-footer ref="" id="modalChangeServer" title="Chỉnh sửa Server">
+      <b-button variant="danger" @click="sendResetServer">Restart Server</b-button>
     </b-modal>
     <b-sidebar width="800px" backdrop shadow id="sidebar-mod" title="Copytrade">
 
       <div class="px-3 py-2">
-        <b-dropdown style="display:none" class="mx-1" right variant="success" text="Cấu Hình">
+        <b-dropdown style="" class="mx-1" right variant="success" text="Cấu Hình">
           <b-dropdown-item v-b-modal.modalChangeMaster>Thay đổi acc Master</b-dropdown-item>
           <b-dropdown-item v-b-modal.modalChangeAccount>Chỉnh sửa tài khoản</b-dropdown-item>
           <b-dropdown-item v-b-modal.modalChangeServer>Tắt mở server</b-dropdown-item>
@@ -167,6 +194,7 @@
         </b-table-simple>
       </b-modal>
       <b-row style="border:10px red">
+
         <b-col xs="12" sm="12" md="12" lg="3">
           <b-input v-model="filter" autocomplete="off" type="search" class="m-2 text-uppercase"></b-input>
           <b-table head-variant="warning" fixed class="myTable" :sort-by.sync="sortBy" :sort-desc.sync="sortDesc"
@@ -311,19 +339,13 @@ export default {
     return {
       title: this.title,
       meta: [
-        { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        {
-          hid: 'description',
-          name: 'description',
-          content: 'my website description'
-        }
+
       ],
     }
   },
   data() {
     return {
-
+      ListAccountsJSON: [],
       calcStatus: true,
       calc: {
         entry: null,
@@ -394,7 +416,7 @@ export default {
       ],
       filter: '',
       sortBy: 'rsi14.value.value',
-      sortDesc: false,
+      sortDesc: true,
       sortDirection: 'desc',
       itemPhanTich: null,
       tdvLink: 'BINANCE:BTCUSDTPERP',
@@ -420,10 +442,33 @@ export default {
         { key: 'symbol' },
         {
           key: 'side', formatter: (value, key, item) => {
+
             return (parseFloat(item.notional) > 0) ? "LONG" : "SHORT"
           }
+        }, {
+          key: 'entryPrice', formatter: (value, key, item) => {
+
+            return (parseFloat(item.entryPrice))
+          }
+        }, {
+          key: 'price', formatter: (value, key, item) => {
+            let a = this.getRealtimePrice(item.symbol)
+            return a;
+          }
         },
-        { key: 'unrealizedProfit', label: 'PNL' },
+        {
+          key: 'initialMargin', label: 'Size', formatter: (value, key, item) => {
+
+            return (parseFloat(item.initialMargin)).toFixed(1)
+          }
+        },
+        {
+          key: 'unrealizedProfit', label: 'PNL', formatter: (value, key, item) => {
+
+            return (parseFloat(item.unrealizedProfit)).toFixed(1)
+          }
+        },
+
 
         { key: 'tool', label: '#' },
       ],
@@ -463,6 +508,14 @@ export default {
       changeAccMaster: '',
       optionChangeAccMaster: [],
       linkbase: 'https://nacy.duckdns.org/',
+      chinhsuaaccountfields: [
+        { key: "id" },
+        { key: 'role' },
+        { key: 'status' },
+        { key: 'apikey' },
+        { key: 'apisec' },
+        { key: 'tool' },
+      ]
     }
   },
   mounted() {
@@ -486,6 +539,7 @@ export default {
     this.connection.onmessage = (event) => {
 
       let d = JSON.parse(event.data);
+      this.realtimePrice = d;
 
       this.alertCheck(d)
       let btcprice = parseFloat((d.find(item => item.s === "BTCUSDT")).p);
@@ -521,11 +575,127 @@ export default {
     }
   },
   methods: {
+    toggleStatus(data) {
+      let id = data.id;
+      let link = this.linkbase + "acc"
+      let status = (data.status) ? "TẮT" : "BẬT"
+
+      this.$bvModal.msgBoxConfirm(`Bạn muốn ${status} account ${id} `, {
+        title: 'Xác nhận',
+        size: 'sm',
+        buttonSize: 'sm',
+        okVariant: 'danger',
+        okTitle: 'YES',
+        cancelTitle: 'NO',
+        footerClass: 'p-2',
+        hideHeaderClose: false,
+        centered: true
+      })
+        .then(value => {
+          if (value) {
+            if (status) {
+              this.$axios.post(link, {
+                action: (data.status) ? "turnoff" : "turnon",
+                idAccount: id,
+                infoAccount: JSON.stringify({ hello: 'world' })
+              }).then(data => {
+                this.$bvToast.toast(`${(data.status) ? "Tắt" : "Bật"} account ${id} thành công, server sẽ reload trong 1s`, {
+                  title: 'Thông báo',
+                  autoHideDelay: 5000,
+                  appendToast: true,
+                  variant: 'success'
+                })
+                this.$bvModal.hide('modalChangeAccount');
+              })
+            }
+          }
+        })
+    },
+    accountDelete(data) {
+      let link = this.linkbase + "acc"
+      this.$bvModal.msgBoxConfirm(`Bạn muốn Xóa account ${data.id} `, {
+        title: 'Xác nhận',
+        size: 'sm',
+        buttonSize: 'sm',
+        okVariant: 'danger',
+        okTitle: 'YES',
+        cancelTitle: 'NO',
+        footerClass: 'p-2',
+        hideHeaderClose: false,
+        centered: true
+      })
+        .then(value => {
+          if (value) {
+            this.$axios.post(link, {
+              action: "delete",
+              idAccount: data.id,
+              infoAccount: JSON.stringify({ hello: 'world' })
+            }).then(data => {
+              this.$bvToast.toast(`Xóa account ${data.id} thành công, server sẽ reload trong 1s`, {
+                title: 'Thông báo',
+                autoHideDelay: 5000,
+                appendToast: true,
+                variant: 'success'
+              })
+              this.$bvModal.hide('modalChangeAccount');
+            })
+
+          }
+        })
+    },
+    getShort(str) {
+      return `${str[0]}${str[1]}${str[2]}...${str[str.length - 3]}${str[str.length - 2]}${str[str.length - 1]}`
+    },
+    sendResetServer() {
+      let link = this.linkbase + 'acc';
+      this.$axios.post(link, {
+        action: 'restartserver',
+        idAccount: '',
+        infoAccount: JSON.stringify({ hello: 'world' })
+      })
+      this.$bvToast.toast(`Khởi động lại server thành công`, {
+        title: 'Thông báo',
+        autoHideDelay: 5000,
+        appendToast: true,
+        variant: 'info'
+      })
+      this.$bvModal.hide('modalChangeServer')
+
+    },
+    getRealtimePrice(sym) {
+      let item;
+      if (this.realTimePrice.length > 0) {
+        item = this.realTimePrice.find(i => {
+          return false;
+        })
+
+      }
+      if (item) {
+        return parseFloat(item.p)
+      } else {
+        return 0;
+      }
+    },
     handleOkChangeAccountMaster() {
+      // let link = 'http://localhost:3000/' + 'acc';
+      // this.$axios.post(link, {
+      //   action: 'setmaster',
+      //   idAccount: 'bao1',
+      //   infoAccount: JSON.stringify({ hello: 'world' })
+      // })
       if (this.changeAccMaster) {
         let link = this.linkbase + 'acc';
         this.$axios.post(link, {
-
+          action: 'setmaster',
+          idAccount: this.changeAccMaster,
+          infoAccount: JSON.stringify({ hello: 'world' })
+        }).then(data => {
+          this.$bvToast.toast(`Thay đổi master thành công, vui lòng chờ server reload`, {
+            title: 'Thông báo',
+            autoHideDelay: 5000,
+            appendToast: true,
+            variant: 'success'
+          })
         })
 
       } else {
@@ -537,9 +707,23 @@ export default {
         })
       }
     },
+
+    getAllAccountJSON() {
+
+      let link = this.linkbase + 'acc';
+      this.$axios.post(link, {
+        action: 'read',
+        idAccount: '99999',
+        infoAccount: JSON.stringify({ hello: 'world' })
+      }).then(data => {
+        this.ListAccountsJSON = data.data.ListAccount
+      })
+
+    },
     resetModalChangeAccountMaster() {
       this.changeAccMaster = null;
     },
+
     setOptionChangeAccountMaster() {
       this.allAccount.forEach(acc => {
         this.optionChangeAccMaster.push(acc.name)
