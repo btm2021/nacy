@@ -226,6 +226,10 @@
               <VueTradingView :key="tdvLink" :symbol="tdvLink" class="chart" style="height:70vh;width:70vw"
                 :options="chartOptions">
               </VueTradingView>
+              <!-- <iframe style="height:70vh;width:70vw" 
+                :src="`https://www.tradingview.com/chart/IKGU9oTD/?symbol=${this.tdvLink}`">
+
+              </iframe> -->
             </b-col>
 
             <b-col class="mt-2" cols-sm="12" cols="7">
@@ -338,6 +342,12 @@ export default {
   head() {
     return {
       title: this.title,
+      script: [
+        {
+          type: 'module',
+          src: 'https://unpkg.com/x-frame-bypass'
+        }
+      ],
       meta: [
 
       ],
@@ -743,19 +753,31 @@ export default {
       })
         .then(value => {
           if (value) {
-            //call
-            this.$axios.post(this.orderLink, {
-              action: 'setmaster',
-              idAccount: info.account
-            }, {
-              'Content-Type': 'application/x-www-form-urlencoded'
+            let link = this.linkbase + "orderdelete"
+            this.$axios.post(link, {
+              account: info.account,
+              symbol: info.symbol,
+              orderId: info.orderId,
+              action: "deleteorder"
             }).then(data => {
-              console.log(data.data)
+              this.$bvToast.toast(`Xóa ORDER ${info.symbol} trên account ${info.account} thành công`, {
+                title: 'Thông báo',
+                autoHideDelay: 5000,
+                appendToast: true,
+                variant: 'success'
+              })
             })
+            console.log(info)
           }
         })
         .catch(err => {
           // An error occurred
+          this.$bvToast.toast(`có lỗi`, {
+            title: 'Lỗi',
+            autoHideDelay: 5000,
+            appendToast: true,
+            variant: 'danger'
+          })
         })
     },
     receptor(msg) {
