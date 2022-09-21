@@ -399,13 +399,24 @@ export default {
         { key: "timeframe", label: 'T' },
         { key: "lastPrice", label: 'price' },
         {
-          key: 'priceChangePercent', label: '%',
+          key: 'symbolQuote.priceChangePercent', label: '%',
           sortable: true
         },
         {
           key: "rsi14.value.value",
           label: "RSI",
           sortable: true
+        }, {
+          key: 'symbolQuote.volume',
+          label: 'Vol(M)',
+          sortable: true,
+          formatter: (value, key, item) => {
+            if (parseFloat(value) > 0) {
+              return (parseFloat(value) * item.lastPrice / 1000000).toFixed(0);
+            } else {
+              return 0
+            }
+          }
         }, {
           key: "funding",
           label: "Fund",
@@ -906,13 +917,15 @@ ROE% =Unrealized PNL in USDT / entry margin = ( ( mark Price - entry Price ) * d
       })
       this.status = false
       this.$axios.get(`${this.volumeLink}?timestamp=${new Date().getTime()}`).then(data => {
-
         this.dataVolume = data.data;
       })
 
       this.$axios.get(`${this.urlLink}?timestamp=${new Date().getTime()}`).then(data => {
+
         for (let i = 0; i < this.dataList.length; i++) {
+
           for (let a = 0; a < data.data.length; a++) {
+
             if (this.dataList[i].name === data.data[a].name) {
               let status = "";
               if (this.dataList[i].lastPrice > data.data[a].lastPrice) {
@@ -925,23 +938,11 @@ ROE% =Unrealized PNL in USDT / entry margin = ( ( mark Price - entry Price ) * d
                 status = "none"
               }
               data.data[a].priceStatus = status;
-
             }
           }
         }
 
         //lay chenh lech gia
-        this.$axios.get(`https://www.binance.com/fapi/v1/ticker/24hr`).then(data1 => {
-          data1.data.forEach(item => {
-            let s = item.symbol;
-            let c = item.priceChangePercent;
-            for (let a = 0; a < data.data.length; a++) {
-              if (data.data[a].name === s) {
-                data.data[a].priceChangePercent = parseFloat(String(parseFloat(c).toFixed(1)))
-              }
-            }
-          })
-        })
 
         this.dataList = data.data;
         //cap nhat itemphantich
