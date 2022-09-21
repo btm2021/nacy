@@ -389,7 +389,8 @@ export default {
         "allow_symbol_change": true,
         "studies": [
           "BB@tv-basicstudies",
-          "Stochastic@tv-basicstudies"
+          "Stochastic@tv-basicstudies",
+          "ZigZag@tv-basicstudies"
         ]
       },
       dataVolume: [],
