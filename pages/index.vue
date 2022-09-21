@@ -408,17 +408,23 @@ export default {
           label: "RSI",
           sortable: true
         }, {
-          key: 'symbolQuote.volume',
-          label: 'Vol(M)',
+          key: "volumeC",
           sortable: true,
-          formatter: (value, key, item) => {
-            if (parseFloat(value) > 0) {
-              return (parseFloat(value) * item.lastPrice / 1000000).toFixed(0);
-            } else {
-              return 0
-            }
-          }
-        }, {
+          label: 'Vol(M)',
+        },
+        //{
+        //   key: 'symbolQuote.volume',
+        //   label: 'Vol(M)',
+        //   sortable: true,
+        //   formatter: (value, key, item) => {
+        //     if (parseFloat(value) > 0) {
+        //       return (parseFloat(value) * item.lastPrice / 1000000).toFixed(0);
+        //     } else {
+        //       return 0
+        //     }
+        //   }
+        // },
+        {
           key: "funding",
           label: "Fund",
           sortable: true
@@ -938,14 +944,24 @@ ROE% =Unrealized PNL in USDT / entry margin = ( ( mark Price - entry Price ) * d
               if (this.dataList[i].lastPrice === data.data[a].lastPrice) {
                 status = "none"
               }
+
               data.data[a].priceStatus = status;
             }
           }
         }
+        let newData = []
+        data.data.map(item => {
 
+          let v = 0;
+          if (item.symbolQuote) {
+            v = (item.symbolQuote.volume * item.lastPrice / 1000000).toFixed(0);
+          }
+          item.volumeC = v;
+          newData.push(item)
+        })
         //lay chenh lech gia
 
-        this.dataList = data.data;
+        this.dataList = newData;
         //cap nhat itemphantich
         if (this.itemPhanTich) {
           this.itemPhanTich = this.dataList.find(item => {
