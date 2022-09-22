@@ -232,7 +232,7 @@
               </iframe> -->
             </b-col>
 
-            <b-col class="mt-2" cols-sm="12" cols="7">
+            <!-- <b-col class="mt-2" cols-sm="12" cols="7">
               <b-table-simple bordered class="mt-2 myTable" style="font-size:12px" small responsive v-if="itemPhanTich">
                 <b-thead>
                   <b-tr>
@@ -282,7 +282,7 @@
                 </b-tbody>
 
               </b-table-simple>
-            </b-col>
+            </b-col> -->
             <b-col class="mt-2" cols-sm="12" cols="5">
               <b-container style="font-size:12px;color:white">
                 <b-row>
