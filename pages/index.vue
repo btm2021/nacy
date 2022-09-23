@@ -75,6 +75,82 @@
     <b-modal ok-only hide-footer ref="" id="modalChangeServer" title="Chỉnh sửa Server">
       <b-button variant="danger" @click="sendResetServer">Restart Server</b-button>
     </b-modal>
+
+    <b-modal :hide-footer="true" ok-only id="calcModal" title="Tính PNL Future Binance">
+      <b-form @submit.prevent="calcPNL" @show="onResetCalc" @reset="onResetCalc">
+        <b-form-group>
+          <b-form-radio-group v-model="calc.side" :options="['LONG','SHORT']" button-variant="outline-primary" buttons>
+          </b-form-radio-group>
+        </b-form-group>
+
+        <b-form-group>
+          <label>Đòn bẩy</label>
+          <b-form-input type="range" step="1" min="1" max="125" v-model="calc.levage" required>
+          </b-form-input>
+          <span>X{{calc.levage}}</span>
+        </b-form-group>
+
+        <b-form-group>
+          <label>Số tiền</label>
+          <b-form-input type="range" min="1000" max="10000" step="500" v-model="calc.margin" required>
+          </b-form-input>
+          <span>Sau Đòn Bẩy <code>{{calc.margin}}</code> <b> USDT</b>: Vốn thực :
+            <code>{{(parseFloat(calc.margin)/parseFloat(calc.levage)).toFixed(1)}}</code><b> USDT</b></span>
+        </b-form-group>
+        <b-form-group>
+          <label>Entry</label>
+          <b-form-input v-model="calc.entry" required>
+          </b-form-input>
+        </b-form-group>
+        <b-form-group>
+          <label>Exit</label>
+          <b-form-input v-model="calc.close" required>
+          </b-form-input>
+        </b-form-group>
+        <b-form-row>
+          <b-col>
+            <b-button type="submit" block variant="primary">Tính</b-button>
+          </b-col>
+
+          <b-col>
+            <b-button type="reset" block variant="danger">Reset</b-button>
+          </b-col>
+        </b-form-row>
+
+
+      </b-form>
+      <b-table-simple fixed bordered class="text-center mt-2" v-if="calcStatus" responsive>
+
+        <b-tbody>
+          <b-tr>
+
+            <b-td><b>Giá Entry</b></b-td>
+            <b-td>{{calc.entry}}</b-td>
+            <b-td><b>Giá Đóng</b></b-td>
+            <b-td>{{calc.close}}</b-td>
+          </b-tr>
+          <b-tr>
+
+            <b-td><b>Vị thế</b></b-td>
+            <b-td><span v-if="(calc.side==='LONG')" style="color:#0CCB80">{{calc.side}}</span><span
+                style="color:#F23545" v-else>{{calc.side}}</span></b-td>
+            <b-td><b>Vốn</b></b-td>
+            <b-td>{{calc.margin}}</b-td>
+          </b-tr>
+
+          <b-tr>
+            <b-td><b>PNL</b></b-td>
+            <b-td><span v-if="(calc.pnl>0)" style="color:#0CCB80">{{calc.pnl}}</span><span style="color:#F23545"
+                v-else>{{calc.pnl}}</span></b-td>
+            <b-td><b>ROE %</b></b-td>
+            <b-td><span v-if="(calc.pnl>0)" style="color:#0CCB80">{{calc.roe}}</span><span style="color:#F23545"
+                v-else>{{calc.roe}}</span></b-td>
+
+          </b-tr>
+        </b-tbody>
+
+      </b-table-simple>
+    </b-modal>
     <b-sidebar width="800px" backdrop shadow id="sidebar-mod" title="Copytrade">
 
       <div class="px-3 py-2">
@@ -117,211 +193,86 @@
     </b-sidebar>
 
     <div class="main container-fluid">
-      <b-modal :hide-footer="true" ok-only id="calcModal" title="Tính PNL Future Binance">
-        <b-form @submit.prevent="calcPNL" @show="onResetCalc" @reset="onResetCalc">
-          <b-form-group>
-            <b-form-radio-group v-model="calc.side" :options="['LONG','SHORT']" button-variant="outline-primary"
-              buttons>
-            </b-form-radio-group>
-          </b-form-group>
 
-          <b-form-group>
-            <label>Đòn bẩy</label>
-            <b-form-input type="range" step="1" min="1" max="125" v-model="calc.levage" required>
-            </b-form-input>
-            <span>X{{calc.levage}}</span>
-          </b-form-group>
+      <b-tabs lazy small pills justified>
+        <b-tab :active="tf.default" style="background-color:black" :title="tf.name" v-for="(tf,indextf) in listlinkscan"
+          :key="indextf">
+          <b-row style="border:10px red;margin-top:5px">
+            <b-col xs="12" sm="12" md="12" lg="3">
+              <b-input v-model="filter" autocomplete="off" type="search" class="text-uppercase"></b-input>
+              <b-table head-variant="warning" fixed class="myTable" :sort-by.sync="sortBy" :sort-desc.sync="sortDesc"
+                :sort-direction="sortDirection" :filter="filter" style="font-size:10px;text-align: center; "
+                :fields="fields" :items="tf.dataList" show-empty small responsive>
+                <template #cell(name)="data">
+                  <span @click="phantich(data.item.name,data.item.timeframe)" class="symName">{{data.item.name}}</span>
+                </template>
+                <template #cell(priceChangePercent)="data">
+                  <span style="color:#F23545"
+                    v-if="data.item.priceChangePercent<0">{{data.item.priceChangePercent}}%</span>
+                  <span style="color:#0CCB80" v-else>{{data.item.priceChangePercent}}%</span>
+                </template>
 
-          <b-form-group>
-            <label>Số tiền</label>
-            <b-form-input type="range" min="1000" max="10000" step="500" v-model="calc.margin" required>
-            </b-form-input>
-            <span>Sau Đòn Bẩy <code>{{calc.margin}}</code> <b> USDT</b>: Vốn thực :
-              <code>{{(parseFloat(calc.margin)/parseFloat(calc.levage)).toFixed(1)}}</code><b> USDT</b></span>
-          </b-form-group>
-          <b-form-group>
-            <label>Entry</label>
-            <b-form-input v-model="calc.entry" required>
-            </b-form-input>
-          </b-form-group>
-          <b-form-group>
-            <label>Exit</label>
-            <b-form-input v-model="calc.close" required>
-            </b-form-input>
-          </b-form-group>
-          <b-form-row>
-            <b-col>
-              <b-button type="submit" block variant="primary">Tính</b-button>
+                <template #cell(funding)="data">
+                  <span style="color:#F23545" v-if="data.item.funding<0">{{data.item.funding}}%</span>
+                  <span style="color:#0CCB80" v-else>{{data.item.funding}}%</span>
+                </template>
+                <template #cell(lastPrice)="data">
+                  <span style="color:#F23545" v-if="data.item.priceStatus==='down'">{{data.item.lastPrice}}</span>
+                  <span style="color:#0CCB80" v-else-if="data.item.priceStatus==='up'">{{data.item.lastPrice}}</span>
+                  <span style="color:white" v-else>{{data.item.lastPrice}}</span>
+                </template>
+
+              </b-table>
             </b-col>
+            <b-col xs="12" sm="12" md="12" lg="9">
+              <b-row>
+                <b-col cols="12">
+                  <VueTradingView :key="tdvLink" :symbol="tdvLink" class="chart" style="height:70vh;width:70vw"
+                    :options="tf.chartOptions">
+                  </VueTradingView>
 
-            <b-col>
-              <b-button type="reset" block variant="danger">Reset</b-button>
-            </b-col>
-          </b-form-row>
+                </b-col>
 
+                <b-col class="mt-2" cols-sm="12" cols="5">
+                  <b-container style="font-size:12px;color:white">
+                    <b-row>
+                      <b-col cols="6">
+                        <b-form ref="formAlert" @submit.prevent="onSubmit" v-if="itemPhanTich">
+                          <b-form-group :label="`Cảnh báo giá ${itemPhanTich.name}`"
+                            description="Tool sẽ cảnh báo giá khi giá thực tế chạm giá cảnh báo">
+                            Giá cao hơn <b-form-input class="mb-4" size="sm" autocomplete="off" v-model="priceAlert">
+                            </b-form-input>
 
-        </b-form>
-        <b-table-simple fixed bordered class="text-center mt-2" v-if="calcStatus" responsive>
+                          </b-form-group>
 
-          <b-tbody>
-            <b-tr>
+                          <b-button type="submit" variant="primary">Thêm</b-button>
+                        </b-form>
+                      </b-col>
+                      <b-col cols="6">
 
-              <b-td><b>Giá Entry</b></b-td>
-              <b-td>{{calc.entry}}</b-td>
-              <b-td><b>Giá Đóng</b></b-td>
-              <b-td>{{calc.close}}</b-td>
-            </b-tr>
-            <b-tr>
-
-              <b-td><b>Vị thế</b></b-td>
-              <b-td><span v-if="(calc.side==='LONG')" style="color:#0CCB80">{{calc.side}}</span><span
-                  style="color:#F23545" v-else>{{calc.side}}</span></b-td>
-              <b-td><b>Vốn</b></b-td>
-              <b-td>{{calc.margin}}</b-td>
-            </b-tr>
-
-            <b-tr>
-              <b-td><b>PNL</b></b-td>
-              <b-td><span v-if="(calc.pnl>0)" style="color:#0CCB80">{{calc.pnl}}</span><span style="color:#F23545"
-                  v-else>{{calc.pnl}}</span></b-td>
-              <b-td><b>ROE %</b></b-td>
-              <b-td><span v-if="(calc.pnl>0)" style="color:#0CCB80">{{calc.roe}}</span><span style="color:#F23545"
-                  v-else>{{calc.roe}}</span></b-td>
-
-            </b-tr>
-          </b-tbody>
-
-        </b-table-simple>
-      </b-modal>
-      <b-row style="border:10px red">
-
-        <b-col xs="12" sm="12" md="12" lg="3">
-          <b-input v-model="filter" autocomplete="off" type="search" class="m-2 text-uppercase"></b-input>
-          <b-table head-variant="warning" fixed class="myTable" :sort-by.sync="sortBy" :sort-desc.sync="sortDesc"
-            :sort-direction="sortDirection" :filter="filter" style="font-size:10px;text-align: center; "
-            :fields="fields" :items="dataList" show-empty small responsive>
-            <template #cell(name)="data">
-              <span @click="phantich(data.item.name,data.item.timeframe)" class="symName">{{data.item.name}}</span>
-            </template>
-            <template #cell(priceChangePercent)="data">
-              <span style="color:#F23545" v-if="data.item.priceChangePercent<0">{{data.item.priceChangePercent}}%</span>
-              <span style="color:#0CCB80" v-else>{{data.item.priceChangePercent}}%</span>
-            </template>
-
-            <template #cell(funding)="data">
-              <span style="color:#F23545" v-if="data.item.funding<0">{{data.item.funding}}%</span>
-              <span style="color:#0CCB80" v-else>{{data.item.funding}}%</span>
-            </template>
-            <template #cell(lastPrice)="data">
-              <span style="color:#F23545" v-if="data.item.priceStatus==='down'">{{data.item.lastPrice}}</span>
-              <span style="color:#0CCB80" v-else-if="data.item.priceStatus==='up'">{{data.item.lastPrice}}</span>
-              <span style="color:white" v-else>{{data.item.lastPrice}}</span>
-            </template>
-
-          </b-table>
-        </b-col>
-        <b-col xs="12" sm="12" md="12" lg="9">
-          <b-row>
-            <b-col cols="12">
-              <VueTradingView :key="tdvLink" :symbol="tdvLink" class="chart" style="height:70vh;width:70vw"
-                :options="chartOptions">
-              </VueTradingView>
-              <!-- <iframe style="height:70vh;width:70vw" 
-                :src="`https://www.tradingview.com/chart/IKGU9oTD/?symbol=${this.tdvLink}`">
-
-              </iframe> -->
-            </b-col>
-
-            <!-- <b-col class="mt-2" cols-sm="12" cols="7">
-              <b-table-simple bordered class="mt-2 myTable" style="font-size:12px" small responsive v-if="itemPhanTich">
-                <b-thead>
-                  <b-tr>
-                    <b-th>Mô tả</b-th>
-                    <b-th>Giá trị</b-th>
-                    <b-th>Đánh giá</b-th>
-                    <b-th>Trend</b-th>
-                  </b-tr>
-                </b-thead>
-                <b-tbody>
-                  <b-tr>
-                    <b-td>EMA20</b-td>
-                    <b-td>{{itemPhanTich.ema20.value.value}}</b-td>
-                    <b-td>{{itemPhanTich.ema20.danhgia}}</b-td>
-                    <b-td>{{itemPhanTich.ema20.value.trend}}</b-td>
-                  </b-tr>
-                  <b-tr>
-                    <b-td>EMA100</b-td>
-                    <b-td>{{itemPhanTich.ema100.value.value}}</b-td>
-
-                    <b-td>{{itemPhanTich.ema100.danhgia}}</b-td>
-
-                    <b-td>{{itemPhanTich.ema100.value.trend}}</b-td>
-                  </b-tr>
-                  <b-tr>
-                    <b-td>EMA200</b-td>
-                    <b-td>{{itemPhanTich.ema200.value.value}}</b-td>
-                    <b-td>{{itemPhanTich.ema200.danhgia}}</b-td>
-                    <b-td>{{itemPhanTich.ema200.value.trend}}</b-td>
-                  </b-tr>
-                  <b-tr>
-                    <b-td>RSI14</b-td>
-                    <b-td colspan="2">{{itemPhanTich.rsi14.value.value}}</b-td>
-                    <b-td>{{itemPhanTich.rsi14.danhgia}}</b-td>
-                  </b-tr>
-
-                  <b-tr>
-                    <b-td>BollingBand</b-td>
-                    <b-td>BB Trên {{itemPhanTich.bb.value.upper}}</b-td>
-                    <b-td>BB Giữa {{itemPhanTich.bb.value.middle}}</b-td>
-                    <b-td>BB Dưới {{itemPhanTich.bb.value.lower}}</b-td>
-                  </b-tr>
-                  <b-tr>
-                    <b-td colspan="2">Volume</b-td>
-                    <b-td colspan="2">{{itemPhanTich.volume.danhgia}}</b-td>
-                  </b-tr>
-                </b-tbody>
-
-              </b-table-simple>
-            </b-col> -->
-            <b-col class="mt-2" cols-sm="12" cols="5">
-              <b-container style="font-size:12px;color:white">
-                <b-row>
-                  <b-col cols="6">
-                    <b-form ref="formAlert" @submit.prevent="onSubmit" v-if="itemPhanTich">
-                      <b-form-group :label="`Cảnh báo giá ${itemPhanTich.name}`"
-                        description="Tool sẽ cảnh báo giá khi giá thực tế chạm giá cảnh báo">
-                        Giá cao hơn <b-form-input class="mb-4" size="sm" autocomplete="off" v-model="priceAlert">
-                        </b-form-input>
-                        <!--                        
-                        Giá thấp hơn <b-form-input size="sm" autocomplete="off" v-model="priceAlert">
-                        </b-form-input> -->
-                      </b-form-group>
-
-                      <b-button type="submit" variant="primary">Thêm</b-button>
-                    </b-form>
-                  </b-col>
-                  <b-col cols="6">
-
-                    <b-table class="mr-2 myTable" style="color:white" :fields="fieldsAlert" small striped
-                      :items="alertList" v-if="alertList.length>0" show-empty>
-                      <template #cell(tool)="data">
-                        <span class="toolDelete" @click="deleteAlert(data.item.name)"
-                          style="text-align: center;color:blue">
-                          X
-                        </span>
-                      </template>
-                    </b-table>
-                  </b-col>
-                </b-row>
-              </b-container>
-            </b-col>
-            <b-col class="mt-2" cols="12">
-              <b-table style="font-size:12px;color: aliceblue !important;display: none;" class="myTable"
-                :items="dataVolume" show-empty small></b-table>
+                        <b-table class="mr-2 myTable" style="color:white" :fields="fieldsAlert" small striped
+                          :items="alertList" v-if="alertList.length>0" show-empty>
+                          <template #cell(tool)="data">
+                            <span class="toolDelete" @click="deleteAlert(data.item.name)"
+                              style="text-align: center;color:blue">
+                              X
+                            </span>
+                          </template>
+                        </b-table>
+                      </b-col>
+                    </b-row>
+                  </b-container>
+                </b-col>
+                <b-col class="mt-2" cols="12">
+                  <b-table style="font-size:12px;color: aliceblue !important;display: none;" class="myTable"
+                    :items="dataVolume" show-empty small></b-table>
+                </b-col>
+              </b-row>
             </b-col>
           </b-row>
-        </b-col>
-      </b-row>
+        </b-tab>
+      </b-tabs>
+
 
     </div>
     <div class="fab-container" @click="toTheTop">
@@ -342,12 +293,6 @@ export default {
   head() {
     return {
       title: this.title,
-      script: [
-        {
-          type: 'module',
-          src: 'https://unpkg.com/x-frame-bypass'
-        }
-      ],
       meta: [
 
       ],
@@ -543,6 +488,104 @@ export default {
         { key: 'apikey' },
         { key: 'apisec' },
         { key: 'tool' },
+      ],
+      listlinkscan: [
+        {
+          name: '5m',
+          url: 'https://scan5m.baotrinh1.repl.co',
+          tdvtime: '5',
+          default: false,
+          dataList: [],
+          chartOptions: {
+            "autosize": true,
+            "symbol": "BINANCE:BTCUSDTPERP",
+            "interval": "5",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "locale": "vi_VN",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "withdateranges": true,
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
+            "studies": [
+              "BB@tv-basicstudies",
+              "Stochastic@tv-basicstudies",
+              "ZigZag@tv-basicstudies"
+            ]
+          }
+        },
+        {
+          name: '15m',
+          url: 'https://scan15m.baotrinh1.repl.co',
+          tdvtime: '15',
+          dataList: [],
+          default: true,
+          chartOptions: {
+            "autosize": true,
+            "interval": "15",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "locale": "vi_VN",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "withdateranges": true,
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
+            "studies": [
+              "BB@tv-basicstudies",
+              "Stochastic@tv-basicstudies",
+              "ZigZag@tv-basicstudies"
+            ]
+          }
+        },
+        {
+          name: '1h',
+          url: 'https://scan1h.baotrinh1.repl.co',
+          tdvtime: '1h',
+          default: false,
+          chartOptions: {
+            "autosize": true,
+            "interval": "60",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "locale": "vi_VN",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "withdateranges": true,
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
+            "studies": [
+              "BB@tv-basicstudies",
+              "Stochastic@tv-basicstudies",
+              "ZigZag@tv-basicstudies"
+            ]
+          }
+        },
+        {
+          name: '4h',
+          url: 'https://scan4h.baotrinh1.repl.co',
+          tdv: '4h',
+          default: false,
+          dataList: [],
+          chartOptions: {
+            "autosize": true,
+            "interval": "240",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "locale": "vi_VN",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "withdateranges": true,
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
+            "studies": [
+              "BB@tv-basicstudies",
+              "Stochastic@tv-basicstudies",
+              "ZigZag@tv-basicstudies"
+            ]
+          }
+        }
       ]
     }
   },
@@ -894,17 +937,35 @@ ROE% =Unrealized PNL in USDT / entry margin = ( ( mark Price - entry Price ) * d
       this.alertList.push(objectAlert)
     },
     phantich(name, timeframe) {
+      this.tdvLink = `BINANCE:${name}PERP`
       let item = this.dataList.find(item => {
         return item.name === name && item.timeframe === timeframe
       })
       if (item) {
         this.itemPhanTich = item;
-        this.tdvLink = `BINANCE:${item.name}PERP`
         this.priceAlert = item.lastPrice;
       }
     },
-
     getData() {
+      //* get all infomation and update
+      this.listlinkscan.map(async (item) => {
+        let url = `${item.url}/indicator?timestamp=${new Date().getTime()}`
+        let re = await this.$axios.get(url);
+        let newData = []
+        re.data.map(item1 => {
+          let v = 0;
+          if (item1.symbolQuote) {
+            v = (item1.symbolQuote.volume * item1.lastPrice / 1000000).toFixed(0);
+          }
+          item1.volumeC = v;
+          newData.push(item1)
+        })
+        item.dataList = newData
+
+      })
+
+
+
       let urlInfo = 'https://nacy.duckdns.org/infoAccount'
       this.$axios.post(urlInfo, {
         action: 'all'
