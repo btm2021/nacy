@@ -2,7 +2,7 @@
   <b-container>
     <b-row>
       <b-col sm="12" md="12" lg="12" xl="12" class="text-center">
-        <b-table head-variant="warning" :fields="fields" class="myTable text-center"
+        <b-table sort-by="status" :sort-desc="true" head-variant="warning" :fields="fields" class="myTable text-center"
           style="font-size:10px !important;text-align: center; color:white !important" :items="currentDataList"
           show-empty small responsive>
           <template #cell(name)="data">
@@ -138,22 +138,29 @@ volume: 9604.9873 */
       return score;
     },
     formatPrice(priceClose, num) {
-      let strPriceClose = ((String(priceClose)).split("."))[1];
-      let numToFix = strPriceClose.length
-      return parseFloat(num.toFixed(numToFix))
+      try {
+        let strPriceClose = ((String(priceClose)).split("."))[1];
+        let numToFix = strPriceClose.length
+        return parseFloat(num.toFixed(numToFix))
+      } catch (err) {
+        return parseFloat(num)
+      }
+
     },
     getLastScan() {
 
-      console.log('có kết quả')
-      let url = 'https://baotmscan1h.run.goorm.app/getByTimeFrame?timeframe=1h'
+      console.log('load')
+      let url = 'https://code.nacy.duckdns.org/getByTimeFrame?timeframe=1h'
       fetch(url).then(data => data.json()).then(data => {
 
+      console.log('có kết quả')
+        data = JSON.parse(data)
         let newData = []
         data.map(i => {
-          let _data = JSON.parse(i.data)
+          let _data = (i.data)
           let objectData = {
             status: this.calcStatus(_data, i.id),
-            name: i.id,
+            name: i.symbol,
             close: _data.close,
             signal: _data.mybot89.lastSignal,
             //  score: this.calcScore(_data, i.id),
