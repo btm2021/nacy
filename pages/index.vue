@@ -1,12 +1,12 @@
 <template>
   <b-container>
     <b-row>
-      <b-col sm="12" md="12" lg="12" xl="12" class="text-center">
+      <b-col cols="12" class="text-center">
         <b-table sort-by="status" :sort-desc="true" head-variant="warning" :fields="fields" class="myTable text-center"
           style="font-size:10px !important;text-align: center; color:white !important" :items="currentDataList"
           show-empty small responsive>
           <template #cell(name)="data">
-            <span class="symName">{{
+            <span @click="symbolphantich = data.item.name; $bvModal.show('m-phantich')" class="symName">{{
               data.item.name
             }}</span>
           </template>
@@ -38,12 +38,17 @@
 
       </b-col>
     </b-row>
+    <b-modal :title="'Phân tích ' + symbolphantich" id="m-phantich" no-close-on-backdrop size="xl">
+      <phantich :symbol="symbolphantich" />
+    </b-modal>
   </b-container>
 
 </template>
 
 <script>
+import phantich from '../components/phantich.vue'
 export default {
+  components: { phantich },
   methods: {
     //account
 
@@ -143,9 +148,12 @@ volume: 9604.9873 */
         let numToFix = strPriceClose.length
         return parseFloat(num.toFixed(numToFix))
       } catch (err) {
-        return parseFloat(num)
+        return parseFloat(num).toFixed(3)
       }
 
+    },
+    phantichsymbol(symbol) {
+      this.symbolphantich = symbol
     },
     getLastScan() {
 
@@ -153,7 +161,7 @@ volume: 9604.9873 */
       let url = 'https://code.nacy.duckdns.org/getByTimeFrame?timeframe=1h'
       fetch(url).then(data => data.json()).then(data => {
 
-      console.log('có kết quả')
+        console.log('có kết quả')
         data = JSON.parse(data)
         let newData = []
         data.map(i => {
@@ -183,7 +191,7 @@ volume: 9604.9873 */
           console.log('refetch')
           this.getLastScan()
 
-        }, 10000)
+        }, 5000)
       })
 
     }
@@ -201,8 +209,10 @@ volume: 9604.9873 */
     return {
       phantichSymbol: {
         symbol: 'BTCUSDT',
+
         timeframe: '1h'
       },
+      symbolphantich: null,
       currentSymbol: 'BTCUSDT',
       dataReady: false,
       currentDataList: [],
